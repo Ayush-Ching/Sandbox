@@ -3,12 +3,13 @@
 
 #include "colors.h"
 
-typedef struct particle {
-	unsigned type;
+typedef struct Particle {
 	Color    color;
-	bool     updated;
-} particle;
+} Particle;
 
-particle Sand = {1, sandColor, false};
+const Particle ParticleTypes[] = {
+	{ transparent },
+	{ sandColor }
+};
 
 #endif
