@@ -1,17 +1,15 @@
-#include <raylib.h>
+#include "particles.h"
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 800
-
-const Color bg               = { 10,  20,  30, 255};
-const Color spawnCircleColor = {210, 220, 230, 255};
 
 void initGame();
 void update();
 void draw();
 
-int spawnRadius = 25;
-Vector2 mousePosition;
+int      spawnRadius       = 25;
+unsigned currentParticleID = 1;
+Vector2  mousePosition;
 
 int main(void) {
 
@@ -32,6 +30,7 @@ void initGame() {
 	SetTargetFPS(60);
 
 	spawnRadius = 25;
+	currentParticleID = 1;
 }
 
 void update() {
