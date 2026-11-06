@@ -11,7 +11,7 @@ void draw();
 int      spawnRadius         = 25;
 unsigned currentParticleType = 1;
 Vector2  mousePosition;
-unsigned particleGrid[SCREEN_WIDTH][SCREEN_HEIGHT] = {0};
+unsigned *particleGrid;
 Texture2D particleTexture;
 Color *pixels;
 
@@ -26,6 +26,7 @@ int main(void) {
 
 	UnloadTexture(particleTexture);
 	free(pixels);
+	free(particleGrid);
 
 	CloseWindow();
 	
@@ -38,6 +39,8 @@ void initGame() {
 
 	spawnRadius = 25;
 	currentParticleType = 1;
+
+	particleGrid = calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(unsigned));
 
 	pixels = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Color));
 
@@ -57,7 +60,7 @@ void update() {
 	if(IsMouseButtonDown(0)) {
 		for(int i = mousePosition.x - spawnRadius; i <= mousePosition.x + spawnRadius; i++) {
 			for(int j = mousePosition.y - spawnRadius; j <= mousePosition.y + spawnRadius; j++) {
-				particleGrid[i][j] = currentParticleType;
+				particleGrid[j * SCREEN_WIDTH + i] = currentParticleType;
 			}
 		}
 	}
@@ -66,7 +69,7 @@ void update() {
 void draw() {
 	for(int i=0; i<SCREEN_WIDTH; i++) {
 		for(int j=0; j<SCREEN_HEIGHT; j++) {
-			pixels[j * SCREEN_WIDTH + i] = ParticleTypes[particleGrid[i][j]].color;
+			pixels[j * SCREEN_WIDTH + i] = ParticleTypes[particleGrid[j * SCREEN_WIDTH + i]].color;
 		}
 	}
 
