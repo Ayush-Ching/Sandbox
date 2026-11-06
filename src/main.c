@@ -59,9 +59,9 @@ void update() {
 	if(IsKeyDown(KEY_RIGHT_BRACKET) || IsKeyDown(KEY_EQUAL) || IsKeyDown(KEY_KP_ADD)     ) spawnRadius = (spawnRadius >= 100) ? 100 : spawnRadius + 1;
 
 	if(IsMouseButtonDown(0)) {
-		for(int i = mousePosition.x - spawnRadius; i <= mousePosition.x + spawnRadius; i++) {
-			for(int j = mousePosition.y - spawnRadius; j <= mousePosition.y + spawnRadius; j++) {
-				particleGrid[j * SCREEN_WIDTH + i] = currentParticleType;
+		for(int x = mousePosition.x - spawnRadius; x <= mousePosition.x + spawnRadius; x++) {
+			for(int y = mousePosition.y - spawnRadius; y <= mousePosition.y + spawnRadius; y++) {
+				if(x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT) particleGrid[y * SCREEN_WIDTH + x] = currentParticleType;
 			}
 		}
 	}
@@ -70,10 +70,8 @@ void update() {
 }
 
 void draw() {
-	for(int i=0; i<SCREEN_WIDTH; i++) {
-		for(int j=0; j<SCREEN_HEIGHT; j++) {
-			pixels[j * SCREEN_WIDTH + i] = ParticleTypes[particleGrid[j * SCREEN_WIDTH + i]].color;
-		}
+	for(size_t i=0; i<SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
+		pixels[i] = ParticleTypes[ particleGrid[i] ].color;
 	}
 
 	UpdateTexture(particleTexture, pixels);
