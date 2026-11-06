@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "particles.h"
 
 #define SCREEN_WIDTH 1280
@@ -55,6 +56,42 @@ void initGame() {
 
 void update() {
 	processInput();
+
+	unsigned *particlesCopy = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(unsigned));
+	memcpy(particlesCopy, particleGrid, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(unsigned));
+
+	// 1 2 3
+	// 4 + 6
+	// 7 8 9
+
+	for(int y = SCREEN_HEIGHT - 1; y >= 0 ; y--) {
+		for(int x = 0; x < SCREEN_WIDTH; x++) {
+			if(particlesCopy[y * SCREEN_WIDTH + x] <= 0) continue;
+
+			int p8 = (y + 1 < SCREEN_HEIGHT) ? particlesCopy[(y + 1) * SCREEN_WIDTH + x] : 1;
+			if(p8 <= 0) {
+				particleGrid[(y + 1) * SCREEN_WIDTH + x] = particleGrid[y * SCREEN_WIDTH + x];
+				particleGrid[y * SCREEN_WIDTH + x] = 0;
+				continue;
+			}
+
+			int p7 = (x - 1 >= 0 && y + 1 < SCREEN_HEIGHT) ? particlesCopy[(y + 1) * SCREEN_WIDTH + x - 1] : 1;
+			if(p7 <= 0) {
+				particleGrid[(y + 1) * SCREEN_WIDTH + x - 1] = particleGrid[y * SCREEN_WIDTH + x];
+				particleGrid[y * SCREEN_WIDTH + x] = 0;
+				continue;
+			}
+
+			int p9 = (x + 1 < SCREEN_WIDTH && y + 1 < SCREEN_HEIGHT) ? particlesCopy[(y + 1) * SCREEN_WIDTH + x + 1] : 1;
+			if(p9 <= 0) {
+				particleGrid[(y + 1) * SCREEN_WIDTH + x + 1] = particleGrid[y * SCREEN_WIDTH + x];
+				particleGrid[y * SCREEN_WIDTH + x] = 0;
+				continue;
+			}
+		}
+	}
+
+	free(particlesCopy);
 }
 
 void processInput() {
@@ -64,15 +101,6 @@ void processInput() {
 		spawnRadius = (spawnRadius <=   5) ?   5 : spawnRadius - 1;
 	if(IsKeyDown(KEY_RIGHT_BRACKET) || IsKeyDown(KEY_EQUAL) || IsKeyDown(KEY_KP_ADD))
 		spawnRadius = (spawnRadius >= 100) ? 100 : spawnRadius + 1;
-
-	// if(IsMouseButtonDown(0)) {
-	// 	for(int x = mousePosition.x - spawnRadius; x <= mousePosition.x + spawnRadius; x++) {
-	// 		for(int y = mousePosition.y - spawnRadius; y <= mousePosition.y + spawnRadius; y++) {
-	// 			if(x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)
-	// 				particleGrid[y * SCREEN_WIDTH + x] = currentParticleType;
-	// 		}
-	// 	}
-	// }
 
 	if(IsMouseButtonDown(0)) {
 		int cx = (int)mousePosition.x;
