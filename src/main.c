@@ -1,12 +1,13 @@
 #include <stdlib.h>
 #include "particles.h"
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 800
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 720
 
 void initGame();
 void update();
 void draw();
+void clearParticleGrid();
 
 int      spawnRadius         = 25;
 unsigned currentParticleType = 1;
@@ -35,7 +36,7 @@ int main(void) {
 
 void initGame() {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "sandbox");
-	SetTargetFPS(1000);
+	SetTargetFPS(60);
 
 	spawnRadius = 25;
 	currentParticleType = 1;
@@ -54,8 +55,8 @@ void initGame() {
 void update() {
 	mousePosition = GetMousePosition();
 
-	if(IsKeyDown(KEY_LEFT_BRACKET) || IsKeyDown(KEY_MINUS) || IsKeyDown(KEY_KP_SUBTRACT) || IsKeyDown(KEY_DOWN))  spawnRadius = (spawnRadius <=   5) ?   5 : spawnRadius - 1;
-	if(IsKeyDown(KEY_RIGHT_BRACKET) || IsKeyDown(KEY_EQUAL) || IsKeyDown(KEY_KP_ADD) || IsKeyDown(KEY_UP)) spawnRadius = (spawnRadius >= 100) ? 100 : spawnRadius + 1;
+	if(IsKeyDown(KEY_LEFT_BRACKET)  || IsKeyDown(KEY_MINUS) || IsKeyDown(KEY_KP_SUBTRACT))  spawnRadius = (spawnRadius <=   5) ?   5 : spawnRadius - 1;
+	if(IsKeyDown(KEY_RIGHT_BRACKET) || IsKeyDown(KEY_EQUAL) || IsKeyDown(KEY_KP_ADD)     ) spawnRadius = (spawnRadius >= 100) ? 100 : spawnRadius + 1;
 
 	if(IsMouseButtonDown(0)) {
 		for(int i = mousePosition.x - spawnRadius; i <= mousePosition.x + spawnRadius; i++) {
@@ -64,6 +65,8 @@ void update() {
 			}
 		}
 	}
+
+	if(IsKeyPressed(KEY_C)) clearParticleGrid();
 }
 
 void draw() {
@@ -84,4 +87,11 @@ void draw() {
 	DrawCircleLinesV(mousePosition, spawnRadius, spawnCircleColor);
 
 	EndDrawing();
+}
+
+
+void clearParticleGrid() {
+	for(size_t i=0; i<SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
+		particleGrid[i] = 0;
+	}
 }
