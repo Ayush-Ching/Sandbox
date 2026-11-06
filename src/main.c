@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdlib.h>
 #include "particles.h"
 
 #define SCREEN_WIDTH 800
@@ -12,6 +12,8 @@ int      spawnRadius         = 25;
 unsigned currentParticleType = 1;
 Vector2  mousePosition;
 unsigned particleGrid[SCREEN_WIDTH][SCREEN_HEIGHT] = {0};
+Texture2D particleTexture;
+Color *pixels;
 
 int main(void) {
 
@@ -22,6 +24,9 @@ int main(void) {
 		draw();
 	}
 
+	UnloadTexture(particleTexture);
+	free(pixels);
+
 	CloseWindow();
 	
 	return 0;
@@ -29,10 +34,18 @@ int main(void) {
 
 void initGame() {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "sandbox");
-	SetTargetFPS(60);
+	SetTargetFPS(1000);
 
 	spawnRadius = 25;
 	currentParticleType = 1;
+
+	pixels = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Color));
+
+	Image img = GenImageColor(SCREEN_WIDTH, SCREEN_HEIGHT, bg);
+	particleTexture = LoadTextureFromImage(img);
+	UnloadImage(img);
+
+	SetTextureFilter(particleTexture, TEXTURE_FILTER_POINT);
 }
 
 void update() {
@@ -51,17 +64,21 @@ void update() {
 }
 
 void draw() {
+	for(int i=0; i<SCREEN_WIDTH; i++) {
+		for(int j=0; j<SCREEN_HEIGHT; j++) {
+			pixels[j * SCREEN_WIDTH + i] = ParticleTypes[particleGrid[i][j]].color;
+		}
+	}
+
+	UpdateTexture(particleTexture, pixels);
+
 	BeginDrawing();
 
 	ClearBackground(bg);
 
-	DrawCircleLinesV(mousePosition, spawnRadius, spawnCircleColor);
+	DrawTexture(particleTexture, 0, 0, WHITE);
 
-	for(int i=0; i<SCREEN_WIDTH; i++) {
-		for(int j=0; j<SCREEN_HEIGHT; j++) {
-			DrawRectangle(i, j, 1, 1, ParticleTypes[particleGrid[i][j]].color);
-		}
-	}
+	DrawCircleLinesV(mousePosition, spawnRadius, spawnCircleColor);
 
 	EndDrawing();
 }
