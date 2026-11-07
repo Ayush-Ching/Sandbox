@@ -5,13 +5,16 @@
 #include "constants.h"
 
 void initGame();
-void update();
+void updateParticles();
 void processInput();
 void draw();
 void clearParticleGrid();
 void sandFall();
+void drawSpawnCircle();
 
-int      spawnRadius         = 5;
+const int srMin              = 10 / GRID_SIZE;
+const int srMax              = 250 / GRID_SIZE;
+int      spawnRadius         = 100 / GRID_SIZE;
 unsigned currentParticleType = 1;
 Vector2  mousePosition;
 unsigned *particlesGrid;
@@ -23,8 +26,9 @@ int main(void) {
 	initGame();
 
 	while(!WindowShouldClose()) {
-		update();
-		sandFall();
+		processInput();
+		updateParticles();
+		// sandFall();
 		draw();
 	}
 
@@ -41,7 +45,7 @@ void initGame() {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "sandbox");
 	SetTargetFPS(FPS);
 
-	spawnRadius = 5;
+	spawnRadius = 100 / GRID_SIZE;
 	currentParticleType = 1;
 
 	particlesGrid = calloc(GRID_WIDTH * GRID_HEIGHT, sizeof(unsigned));
@@ -55,9 +59,7 @@ void initGame() {
 	SetTextureFilter(particleTexture, TEXTURE_FILTER_POINT);
 }
 
-void update() {
-	processInput();
-	
+void updateParticles() {	
 	// 1 2 3
 	// 4 5 6
 	// 7 8 9
@@ -97,9 +99,9 @@ void processInput() {
 	mousePosition.y /= GRID_SIZE;
 
 	if(IsKeyDown(KEY_LEFT_BRACKET)  || IsKeyDown(KEY_MINUS) || IsKeyDown(KEY_KP_SUBTRACT)) 
-		spawnRadius = (spawnRadius <=   1) ?   1 : spawnRadius - 1;
+		spawnRadius = (spawnRadius <= srMin) ? srMin : spawnRadius - 1;
 	if(IsKeyDown(KEY_RIGHT_BRACKET) || IsKeyDown(KEY_EQUAL) || IsKeyDown(KEY_KP_ADD))
-		spawnRadius = (spawnRadius >= 10) ? 10 : spawnRadius + 1;
+		spawnRadius = (spawnRadius >= srMax) ? srMax : spawnRadius + 1;
 
 	if(IsMouseButtonDown(0)) {
 		int cx = (int)mousePosition.x;
@@ -115,9 +117,8 @@ void processInput() {
 				int dx = x - cx;
 				int dy = y - cy;
 				
-				if(dx * dx + dy * dy <= r2) {
+				if(dx * dx + dy * dy <= r2 && particlesGrid[y * GRID_WIDTH + x] <= 0)
 					particlesGrid[y * GRID_WIDTH + x] = currentParticleType;
-				}
 			}
 		}
 	}
@@ -138,11 +139,30 @@ void draw() {
 
 	DrawTextureEx(particleTexture, (Vector2){0, 0}, 0, GRID_SIZE, WHITE);
 
-	DrawCircleLines(mousePosition.x * GRID_SIZE, mousePosition.y * GRID_SIZE, spawnRadius * GRID_SIZE, spawnCircleColor);
+	drawSpawnCircle();
 
 	EndDrawing();
 }
 
+void drawSpawnCircle() {
+	int cx = (int)mousePosition.x;
+	int cy = (int)mousePosition.y;
+	int r2 = spawnRadius * spawnRadius;
+
+	for(int x = cx - spawnRadius; x <= cx + spawnRadius; x++) {
+		for(int y = cy - spawnRadius; y <= cy + spawnRadius; y++) {
+		
+			if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT)
+				continue;
+			
+			int dx = x - cx > 0 ? x - cx : cx - x;
+			int dy = y - cy > 0 ? y - cy : cy - y;
+			
+			if(dx * dx + dy * dy <= r2 && (((dx+1)*(dx+1) + dy*dy > r2) || ((dy+1)*(dy+1) + dx*dx > r2)))
+				DrawRectangle(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE, WHITE);
+		}
+	}
+}
 
 void clearParticleGrid() {
 	for(size_t i=0; i<GRID_WIDTH * GRID_HEIGHT; i++) {
