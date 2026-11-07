@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "utils.h"
+#include "constants.h"
 
 unsigned GetNeighbourParticleType(int x, int y, int pos, unsigned* particlesGrid) {
 

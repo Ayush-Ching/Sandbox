@@ -2,6 +2,7 @@
 #include <string.h>
 #include "particles.h"
 #include "utils.h"
+#include "constants.h"
 
 void initGame();
 void update();
@@ -61,27 +62,27 @@ void update() {
 
 	for(int y = SCREEN_HEIGHT - 1; y >= 0 ; y--) {
 		for(int x = 0; x < SCREEN_WIDTH; x++) {
-			if(particlesGrid[y * SCREEN_WIDTH + x] <= 0) continue;
+			if(particlesGrid[GetGridIndex(x, y)] <= 0) continue;
 
 			int p8 = GetNeighbourParticleType(x, y, 8, particlesGrid);
 			if(p8 <= 0) {
-				particlesGrid[(y + 1) * SCREEN_WIDTH + x] = particlesGrid[y * SCREEN_WIDTH + x];
-				particlesGrid[y * SCREEN_WIDTH + x] = 0;
+				particlesGrid[GetGridIndex(x, y + 1)] = particlesGrid[GetGridIndex(x, y)];
+				particlesGrid[GetGridIndex(x, y)] = 0;
 				continue;
 			}
 
 			int p7 = GetNeighbourParticleType(x, y, 7, particlesGrid);
 			if(p7 <= 0) {
-				particlesGrid[(y + 1) * SCREEN_WIDTH + x - 1] = particlesGrid[y * SCREEN_WIDTH + x];
-				particlesGrid[y * SCREEN_WIDTH + x] = 0;
+				particlesGrid[GetGridIndex(x - 1, y + 1)] = particlesGrid[GetGridIndex(x, y)];
+				particlesGrid[GetGridIndex(x, y)] = 0;
 				continue;
 			}
 
 			int p9 = GetNeighbourParticleType(x, y, 9, particlesGrid);
 			int p6 = GetNeighbourParticleType(x, y, 6, particlesGrid);
 			if(p9 <= 0 && p6 <= 0) {
-				particlesGrid[(y + 1) * SCREEN_WIDTH + x + 1] = particlesGrid[y * SCREEN_WIDTH + x];
-				particlesGrid[y * SCREEN_WIDTH + x] = 0;
+				particlesGrid[GetGridIndex(x + 1, y + 1)] = particlesGrid[GetGridIndex(x, y)];
+				particlesGrid[GetGridIndex(x, y)] = 0;
 				continue;
 			}
 		}
