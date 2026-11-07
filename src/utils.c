@@ -4,7 +4,7 @@
 
 unsigned GetNeighbourParticleType(int x, int y, int pos, unsigned* particlesGrid) {
 
-	if(x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) {
+	if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) {
 		fprintf(stderr, "GetNeighboutParticleType: the self particle is out of bounds of the grid\n");
 	}
 
@@ -24,7 +24,7 @@ unsigned GetNeighbourParticleType(int x, int y, int pos, unsigned* particlesGrid
 			else return particlesGrid[GetGridIndex(x, y - 1)];
 			break;
 		case 3:
-			if(x + 1 >= SCREEN_WIDTH || y - 1 < 0) return indestructibleType;
+			if(x + 1 >= GRID_WIDTH || y - 1 < 0) return indestructibleType;
 			else return particlesGrid[GetGridIndex(x + 1, y - 1)];
 			break;
 		case 4:
@@ -35,19 +35,19 @@ unsigned GetNeighbourParticleType(int x, int y, int pos, unsigned* particlesGrid
 			return particlesGrid[GetGridIndex(x, y)];
 			break;
 		case 6:
-			if(x + 1 >= SCREEN_WIDTH) return indestructibleType;
+			if(x + 1 >= GRID_WIDTH) return indestructibleType;
 			else return particlesGrid[GetGridIndex(x + 1, y)];
 			break;
 		case 7:
-			if(x - 1 < 0 || y + 1 >= SCREEN_HEIGHT) return indestructibleType;
+			if(x - 1 < 0 || y + 1 >= GRID_HEIGHT) return indestructibleType;
 			else return particlesGrid[GetGridIndex(x - 1, y + 1)];
 			break;
 		case 8:
-			if(y + 1 >= SCREEN_HEIGHT) return indestructibleType;
+			if(y + 1 >= GRID_HEIGHT) return indestructibleType;
 			else return particlesGrid[GetGridIndex(x, y + 1)];
 			break;
 		case 9:
-			if(x + 1 >= SCREEN_WIDTH || y + 1 >= SCREEN_HEIGHT) return indestructibleType;
+			if(x + 1 >= GRID_WIDTH || y + 1 >= GRID_HEIGHT) return indestructibleType;
 			else return particlesGrid[GetGridIndex(x + 1, y + 1)];
 			break;
 		default:
@@ -62,5 +62,5 @@ unsigned GetNeighbourParticleTypeXY(int x, int y, int dx, int dy, unsigned* part
 }
 
 int GetGridIndex(int x, int y) {
-	return y * SCREEN_WIDTH + x;
+	return y * GRID_WIDTH + x;
 }

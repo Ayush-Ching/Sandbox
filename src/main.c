@@ -11,7 +11,7 @@ void draw();
 void clearParticleGrid();
 void sandFall();
 
-int      spawnRadius         = 25;
+int      spawnRadius         = 5;
 unsigned currentParticleType = 1;
 Vector2  mousePosition;
 unsigned *particlesGrid;
@@ -41,14 +41,14 @@ void initGame() {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "sandbox");
 	SetTargetFPS(FPS);
 
-	spawnRadius = 25;
+	spawnRadius = 5;
 	currentParticleType = 1;
 
-	particlesGrid = calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(unsigned));
+	particlesGrid = calloc(GRID_WIDTH * GRID_HEIGHT, sizeof(unsigned));
 
-	pixels = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Color));
+	pixels = malloc(GRID_WIDTH * GRID_HEIGHT * sizeof(Color));
 
-	Image img = GenImageColor(SCREEN_WIDTH, SCREEN_HEIGHT, bg);
+	Image img = GenImageColor(GRID_WIDTH, GRID_HEIGHT, bg);
 	particleTexture = LoadTextureFromImage(img);
 	UnloadImage(img);
 
@@ -62,8 +62,8 @@ void update() {
 	// 4 5 6
 	// 7 8 9
 
-	for(int y = SCREEN_HEIGHT - 1; y >= 0 ; y--) {
-		for(int x = 0; x < SCREEN_WIDTH; x++) {
+	for(int y = GRID_HEIGHT - 1; y >= 0 ; y--) {
+		for(int x = 0; x < GRID_WIDTH; x++) {
 			if(particlesGrid[GetGridIndex(x, y)] <= 0) continue;
 
 			int p8 = GetNeighbourParticleType(x, y, 8, particlesGrid);
@@ -93,11 +93,13 @@ void update() {
 
 void processInput() {
 	mousePosition = GetMousePosition();
+	mousePosition.x /= GRID_SIZE;
+	mousePosition.y /= GRID_SIZE;
 
 	if(IsKeyDown(KEY_LEFT_BRACKET)  || IsKeyDown(KEY_MINUS) || IsKeyDown(KEY_KP_SUBTRACT)) 
-		spawnRadius = (spawnRadius <=   5) ?   5 : spawnRadius - 1;
+		spawnRadius = (spawnRadius <=   1) ?   1 : spawnRadius - 1;
 	if(IsKeyDown(KEY_RIGHT_BRACKET) || IsKeyDown(KEY_EQUAL) || IsKeyDown(KEY_KP_ADD))
-		spawnRadius = (spawnRadius >= 100) ? 100 : spawnRadius + 1;
+		spawnRadius = (spawnRadius >= 10) ? 10 : spawnRadius + 1;
 
 	if(IsMouseButtonDown(0)) {
 		int cx = (int)mousePosition.x;
@@ -107,14 +109,14 @@ void processInput() {
 		for(int x = cx - spawnRadius; x <= cx + spawnRadius; x++) {
 			for(int y = cy - spawnRadius; y <= cy + spawnRadius; y++) {
 			
-				if(x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT)
+				if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT)
 					continue;
 				
 				int dx = x - cx;
 				int dy = y - cy;
 				
 				if(dx * dx + dy * dy <= r2) {
-					particlesGrid[y * SCREEN_WIDTH + x] = currentParticleType;
+					particlesGrid[y * GRID_WIDTH + x] = currentParticleType;
 				}
 			}
 		}
@@ -124,8 +126,8 @@ void processInput() {
 }
 
 void draw() {
-	for(size_t i=0; i<SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
-		pixels[i] = ParticleTypes[ particlesGrid[i] ].color;
+	for(size_t i=0; i<GRID_WIDTH * GRID_HEIGHT; i++) {
+		pixels[i] = ParticleTypes[particlesGrid[i]].color;
 	}
 
 	UpdateTexture(particleTexture, pixels);
@@ -134,16 +136,16 @@ void draw() {
 
 	ClearBackground(bg);
 
-	DrawTexture(particleTexture, 0, 0, WHITE);
+	DrawTextureEx(particleTexture, (Vector2){0, 0}, 0, GRID_SIZE, WHITE);
 
-	DrawCircleLinesV(mousePosition, spawnRadius, spawnCircleColor);
+	DrawCircleLines(mousePosition.x * GRID_SIZE, mousePosition.y * GRID_SIZE, spawnRadius * GRID_SIZE, spawnCircleColor);
 
 	EndDrawing();
 }
 
 
 void clearParticleGrid() {
-	for(size_t i=0; i<SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
+	for(size_t i=0; i<GRID_WIDTH * GRID_HEIGHT; i++) {
 		particlesGrid[i] = 0;
 	}
 }
@@ -154,7 +156,6 @@ void sandFall() {
 
 	if(timer > 3) {
 		timer = 0;
-		particlesGrid[GetGridIndex(400, 0)] = 1;
-		particlesGrid[GetGridIndex(399, 0)] = 1;
+		particlesGrid[GetGridIndex(40, 0)] = 1;
 	}
 }
