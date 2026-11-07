@@ -1,9 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "particles.h"
-
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 720
+#include "utils.h"
 
 void initGame();
 void update();
@@ -14,7 +12,7 @@ void clearParticleGrid();
 int      spawnRadius         = 25;
 unsigned currentParticleType = 1;
 Vector2  mousePosition;
-unsigned *particleGrid;
+unsigned *particlesGrid;
 Texture2D particleTexture;
 Color *pixels;
 
@@ -29,7 +27,7 @@ int main(void) {
 
 	UnloadTexture(particleTexture);
 	free(pixels);
-	free(particleGrid);
+	free(particlesGrid);
 
 	CloseWindow();
 	
@@ -38,12 +36,12 @@ int main(void) {
 
 void initGame() {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "sandbox");
-	SetTargetFPS(60);
+	SetTargetFPS(FPS);
 
 	spawnRadius = 25;
 	currentParticleType = 1;
 
-	particleGrid = calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(unsigned));
+	particlesGrid = calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(unsigned));
 
 	pixels = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Color));
 
@@ -56,42 +54,38 @@ void initGame() {
 
 void update() {
 	processInput();
-
-	unsigned *particlesCopy = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(unsigned));
-	memcpy(particlesCopy, particleGrid, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(unsigned));
-
+	
 	// 1 2 3
-	// 4 + 6
+	// 4 5 6
 	// 7 8 9
 
 	for(int y = SCREEN_HEIGHT - 1; y >= 0 ; y--) {
 		for(int x = 0; x < SCREEN_WIDTH; x++) {
-			if(particlesCopy[y * SCREEN_WIDTH + x] <= 0) continue;
+			if(particlesGrid[y * SCREEN_WIDTH + x] <= 0) continue;
 
-			int p8 = (y + 1 < SCREEN_HEIGHT) ? particlesCopy[(y + 1) * SCREEN_WIDTH + x] : 1;
+			int p8 = GetNeighbourParticleType(x, y, 8, particlesGrid);
 			if(p8 <= 0) {
-				particleGrid[(y + 1) * SCREEN_WIDTH + x] = particleGrid[y * SCREEN_WIDTH + x];
-				particleGrid[y * SCREEN_WIDTH + x] = 0;
+				particlesGrid[(y + 1) * SCREEN_WIDTH + x] = particlesGrid[y * SCREEN_WIDTH + x];
+				particlesGrid[y * SCREEN_WIDTH + x] = 0;
 				continue;
 			}
 
-			int p7 = (x - 1 >= 0 && y + 1 < SCREEN_HEIGHT) ? particlesCopy[(y + 1) * SCREEN_WIDTH + x - 1] : 1;
+			int p7 = GetNeighbourParticleType(x, y, 7, particlesGrid);
 			if(p7 <= 0) {
-				particleGrid[(y + 1) * SCREEN_WIDTH + x - 1] = particleGrid[y * SCREEN_WIDTH + x];
-				particleGrid[y * SCREEN_WIDTH + x] = 0;
+				particlesGrid[(y + 1) * SCREEN_WIDTH + x - 1] = particlesGrid[y * SCREEN_WIDTH + x];
+				particlesGrid[y * SCREEN_WIDTH + x] = 0;
 				continue;
 			}
 
-			int p9 = (x + 1 < SCREEN_WIDTH && y + 1 < SCREEN_HEIGHT) ? particlesCopy[(y + 1) * SCREEN_WIDTH + x + 1] : 1;
-			if(p9 <= 0) {
-				particleGrid[(y + 1) * SCREEN_WIDTH + x + 1] = particleGrid[y * SCREEN_WIDTH + x];
-				particleGrid[y * SCREEN_WIDTH + x] = 0;
+			int p9 = GetNeighbourParticleType(x, y, 9, particlesGrid);
+			int p6 = GetNeighbourParticleType(x, y, 6, particlesGrid);
+			if(p9 <= 0 && p6 <= 0) {
+				particlesGrid[(y + 1) * SCREEN_WIDTH + x + 1] = particlesGrid[y * SCREEN_WIDTH + x];
+				particlesGrid[y * SCREEN_WIDTH + x] = 0;
 				continue;
 			}
 		}
 	}
-
-	free(particlesCopy);
 }
 
 void processInput() {
@@ -117,7 +111,7 @@ void processInput() {
 				int dy = y - cy;
 				
 				if(dx * dx + dy * dy <= r2) {
-					particleGrid[y * SCREEN_WIDTH + x] = currentParticleType;
+					particlesGrid[y * SCREEN_WIDTH + x] = currentParticleType;
 				}
 			}
 		}
@@ -128,7 +122,7 @@ void processInput() {
 
 void draw() {
 	for(size_t i=0; i<SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
-		pixels[i] = ParticleTypes[ particleGrid[i] ].color;
+		pixels[i] = ParticleTypes[ particlesGrid[i] ].color;
 	}
 
 	UpdateTexture(particleTexture, pixels);
@@ -147,6 +141,6 @@ void draw() {
 
 void clearParticleGrid() {
 	for(size_t i=0; i<SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
-		particleGrid[i] = 0;
+		particlesGrid[i] = 0;
 	}
 }
