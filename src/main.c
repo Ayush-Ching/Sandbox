@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <direct.h>
 #include <stdlib.h>
 #include <string.h>
 #include "particles.h"
@@ -9,27 +11,42 @@ void updateParticles();
 void processInput();
 void draw();
 void clearParticleGrid();
-void sandFall();
 void drawSpawnCircle();
+void sandFall();
 
-const int srMin              = 10 / GRID_SIZE;
-const int srMax              = 250 / GRID_SIZE;
-int      spawnRadius         = 100 / GRID_SIZE;
-unsigned currentParticleType = 1;
-Vector2  mousePosition;
-unsigned *particlesGrid;
-Texture2D particleTexture;
-Color *pixels;
+const int  srMin               = 10 / GRID_SIZE;
+const int  srMax               = 250 / GRID_SIZE;
+int        spawnRadius         = 100 / GRID_SIZE;
+int        frameCount          = 0;
+unsigned   currentParticleType = 1;
+Vector2    mousePosition;
+unsigned   *particlesGrid;
+Texture2D  particleTexture;
+Color      *pixels;
 
 int main(void) {
+	printf("Working directory: %s\n", GetWorkingDirectory());
+
+	int result = _mkdir("frames");
+
+	printf("mkdir result: %d\n", result);
+	printf("Frames directory exists: %d\n", DirectoryExists("frames"));
+
 
 	initGame();
 
 	while(!WindowShouldClose()) {
 		processInput();
 		updateParticles();
-		// sandFall();
+		sandFall();
 		draw();
+		
+		Image screenshot = LoadImageFromScreen();
+		Rectangle crop = {0, 225, 1600, 900};
+		ImageCrop(&screenshot, crop);
+		ExportImage(screenshot, TextFormat("frames/frame_%04d.png", frameCount));
+		UnloadImage(screenshot);
+		frameCount++;
 	}
 
 	UnloadTexture(particleTexture);
@@ -47,6 +64,7 @@ void initGame() {
 
 	spawnRadius = 100 / GRID_SIZE;
 	currentParticleType = 1;
+	frameCount = 0;
 
 	particlesGrid = calloc(GRID_WIDTH * GRID_HEIGHT, sizeof(unsigned));
 
@@ -176,6 +194,6 @@ void sandFall() {
 
 	if(timer > 3) {
 		timer = 0;
-		particlesGrid[GetGridIndex(40, 0)] = 1;
+		particlesGrid[GetGridIndex(GRID_WIDTH / 2, 0)] = 1;
 	}
 }
