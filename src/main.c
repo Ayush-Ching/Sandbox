@@ -9,6 +9,7 @@ void update();
 void processInput();
 void draw();
 void clearParticleGrid();
+void sandFall();
 
 int      spawnRadius         = 25;
 unsigned currentParticleType = 1;
@@ -23,6 +24,7 @@ int main(void) {
 
 	while(!WindowShouldClose()) {
 		update();
+		sandFall();
 		draw();
 	}
 
@@ -143,5 +145,16 @@ void draw() {
 void clearParticleGrid() {
 	for(size_t i=0; i<SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
 		particlesGrid[i] = 0;
+	}
+}
+
+void sandFall() {
+	static int timer = 0;
+	timer ++;
+
+	if(timer > 3) {
+		timer = 0;
+		particlesGrid[GetGridIndex(400, 0)] = 1;
+		particlesGrid[GetGridIndex(399, 0)] = 1;
 	}
 }
