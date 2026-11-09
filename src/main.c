@@ -22,6 +22,8 @@ const int    srMax                = 250 / GRID_SIZE;  // max spawn radius
 size_t       frameCount           = 0;
 unsigned     currentParticleType  = 1;
 const float  gravity              = 0.1f;
+const float  maxVelocity          = 3.0f;
+const int    gridLength           = GRID_WIDTH * GRID_HEIGHT;
 
 Vector2      mousePosition;
 unsigned     *particlesGrid;
@@ -68,10 +70,13 @@ void initGame() {
 	currentParticleType = 1;
 	frameCount = 0;
 
-	particlesGrid = calloc(GRID_WIDTH * GRID_HEIGHT, sizeof(unsigned));
-	velocityGrid  = calloc(GRID_WIDTH * GRID_HEIGHT, sizeof(float));
+	particlesGrid = calloc(gridLength, sizeof(unsigned));
+	velocityGrid  = calloc(gridLength, sizeof(float));
+	pixels        = malloc(gridLength * sizeof(Color));
 
-	pixels = malloc(GRID_WIDTH * GRID_HEIGHT * sizeof(Color));
+	if(!particlesGrid || !velocityGrid || !pixels) {
+		fprintf(stderr, "Failed to allocate memory for the grids\n");
+	}
 
 	Image img = GenImageColor(GRID_WIDTH, GRID_HEIGHT, bg);
 	particleTexture = LoadTextureFromImage(img);
@@ -88,45 +93,51 @@ void updateParticles() {
 	for(int y = GRID_HEIGHT - 1; y >= 0 ; y--) {
 		for(int x = 0; x < GRID_WIDTH; x++) {
 			if(particlesGrid[GetGridIndex(x, y)] <= 0) continue;
+			
+			int newX = x;
+			int newY = y;
 
-			velocityGrid[GetGridIndex(x, y)] += gravity;
+			velocityGrid[GetGridIndex(newX, newY)] += gravity;
+			if (velocityGrid[GetGridIndex(newX, newY)] > maxVelocity) {
+				velocityGrid[GetGridIndex(newX, newY)] = maxVelocity;
+			}
 
-			int repeat = (int)ceil(velocityGrid[GetGridIndex(x, y)]);
+			int repeat = (int)ceil(velocityGrid[GetGridIndex(newX, newY)]);
 			while(repeat--) {
-				int p8 = GetNeighbourParticleType(x, y, 8, particlesGrid);
+				int p8 = GetNeighbourParticleType(newX, newY, 8, particlesGrid);
 				if(p8 <= 0) {
-					particlesGrid[GetGridIndex(x, y + 1)] = particlesGrid[GetGridIndex(x, y)];
-					velocityGrid[GetGridIndex(x, y + 1)] = velocityGrid[GetGridIndex(x, y)];
-					particlesGrid[GetGridIndex(x, y)] = 0;
-					velocityGrid[GetGridIndex(x, y)] = 0.0f;
-					y = y + 1;
+					particlesGrid[GetGridIndex(newX, newY + 1)] = particlesGrid[GetGridIndex(newX, newY)];
+					velocityGrid[GetGridIndex(newX, newY + 1)] = velocityGrid[GetGridIndex(newX, newY)];
+					particlesGrid[GetGridIndex(newX, newY)] = 0;
+					velocityGrid[GetGridIndex(newX, newY)] = 0.0f;
+					newY = newY + 1;
 					continue;
 				}
 
-				int p7 = GetNeighbourParticleType(x, y, 7, particlesGrid);
+				int p7 = GetNeighbourParticleType(newX, newY, 7, particlesGrid);
 				if(p7 <= 0) {
-					particlesGrid[GetGridIndex(x - 1, y + 1)] = particlesGrid[GetGridIndex(x, y)];
-					velocityGrid[GetGridIndex(x - 1, y + 1)] = velocityGrid[GetGridIndex(x, y)];
-					particlesGrid[GetGridIndex(x, y)] = 0;
-					velocityGrid[GetGridIndex(x, y)] = 0.0f;
-					x = x - 1;
-					y = y + 1;
+					particlesGrid[GetGridIndex(newX - 1, newY + 1)] = particlesGrid[GetGridIndex(newX, newY)];
+					velocityGrid[GetGridIndex(newX - 1, newY + 1)] = velocityGrid[GetGridIndex(newX, newY)];
+					particlesGrid[GetGridIndex(newX, newY)] = 0;
+					velocityGrid[GetGridIndex(newX, newY)] = 0.0f;
+					newX = newX - 1;
+					newY = newY + 1;
 					continue;
 				}
 
-				int p9 = GetNeighbourParticleType(x, y, 9, particlesGrid);
-				int p6 = GetNeighbourParticleType(x, y, 6, particlesGrid);
+				int p9 = GetNeighbourParticleType(newX, newY, 9, particlesGrid);
+				int p6 = GetNeighbourParticleType(newX, newY, 6, particlesGrid);
 				if(p9 <= 0 && p6 <= 0) {
-					particlesGrid[GetGridIndex(x + 1, y + 1)] = particlesGrid[GetGridIndex(x, y)];
-					velocityGrid[GetGridIndex(x + 1, y + 1)] = velocityGrid[GetGridIndex(x, y)];
-					particlesGrid[GetGridIndex(x, y)] = 0;
-					velocityGrid[GetGridIndex(x, y)] = 0.0f;
-					x = x + 1;
-					y = y + 1;
+					particlesGrid[GetGridIndex(newX + 1, newY + 1)] = particlesGrid[GetGridIndex(newX, newY)];
+					velocityGrid[GetGridIndex(newX + 1, newY + 1)] = velocityGrid[GetGridIndex(newX, newY)];
+					particlesGrid[GetGridIndex(newX, newY)] = 0;
+					velocityGrid[GetGridIndex(newX, newY)] = 0.0f;
+					newX = newX + 1;
+					newY = newY + 1;
 					continue;
 				}
 
-				velocityGrid[GetGridIndex(x, y)] = 0.0f;
+				velocityGrid[GetGridIndex(newX, newY)] = 0.0f;
 
 			}
 		}
@@ -169,7 +180,7 @@ void processInput() {
 }
 
 void draw() {
-	for(size_t i=0; i<GRID_WIDTH * GRID_HEIGHT; i++) {
+	for(size_t i=0; i<gridLength; i++) {
 		pixels[i] = ParticleTypes[particlesGrid[i]].color;
 	}
 
@@ -209,6 +220,7 @@ void drawSpawnCircle() {
 void clearParticleGrid() {
 	for(size_t i=0; i<GRID_WIDTH * GRID_HEIGHT; i++) {
 		particlesGrid[i] = 0;
+		velocityGrid[i]  = 0.0f;
 	}
 }
 
