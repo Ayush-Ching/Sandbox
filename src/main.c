@@ -16,7 +16,7 @@ void drawSpawnCircle();
 void sandFall();
 void takeScreenshots();
 
-int          spawnRadius          = 100 / GRID_SIZE;  // spawn radius
+int          spawnRadius          = 50 / GRID_SIZE;   // spawn radius
 const int    srMin                = 10 / GRID_SIZE;   // min spawn radius
 const int    srMax                = 250 / GRID_SIZE;  // max spawn radius
 size_t       frameCount           = 0;
@@ -66,7 +66,7 @@ void initGame() {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "sandbox");
 	SetTargetFPS(FPS);
 
-	spawnRadius = 100 / GRID_SIZE;
+	spawnRadius = 50 / GRID_SIZE;
 	currentParticleType = 1;
 	frameCount = 0;
 
@@ -83,6 +83,43 @@ void initGame() {
 	UnloadImage(img);
 
 	SetTextureFilter(particleTexture, TEXTURE_FILTER_POINT);
+}
+
+void processInput() {
+	mousePosition = GetMousePosition();
+	mousePosition.x /= GRID_SIZE;
+	mousePosition.y /= GRID_SIZE;
+
+	if(IsKeyDown(KEY_LEFT_BRACKET)  || IsKeyDown(KEY_MINUS) || IsKeyDown(KEY_KP_SUBTRACT)) 
+		spawnRadius = (spawnRadius <= srMin) ? srMin : spawnRadius - 1;
+	if(IsKeyDown(KEY_RIGHT_BRACKET) || IsKeyDown(KEY_EQUAL) || IsKeyDown(KEY_KP_ADD))
+		spawnRadius = (spawnRadius >= srMax) ? srMax : spawnRadius + 1;
+
+	if(IsMouseButtonDown(0)) {
+		int cx = (int)mousePosition.x;
+		int cy = (int)mousePosition.y;
+		int r2 = spawnRadius * spawnRadius;
+		int cm = (cx + cy) % 2;    // this is just to make sure that we can spawn a particle with 1 pixel size circle.
+
+		for(int x = cx - spawnRadius; x <= cx + spawnRadius; x++) {
+			for(int y = cy - spawnRadius; y <= cy + spawnRadius; y++) {
+			
+				if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) continue;
+				if((x + y) % 2 != cm) continue;
+				if(particlesGrid[y * GRID_WIDTH + x] > 0) continue;
+				
+				int dx = x - cx;
+				int dy = y - cy;
+				
+				if(dx * dx + dy * dy <= r2) {
+					particlesGrid[y * GRID_WIDTH + x] = currentParticleType;
+					velocityGrid [y * GRID_WIDTH + x] = 0;
+				}
+			}
+		}
+	}
+
+	if(IsKeyPressed(KEY_C)) clearParticleGrid();
 }
 
 void updateParticles() {
@@ -142,41 +179,6 @@ void updateParticles() {
 			}
 		}
 	}
-}
-
-void processInput() {
-	mousePosition = GetMousePosition();
-	mousePosition.x /= GRID_SIZE;
-	mousePosition.y /= GRID_SIZE;
-
-	if(IsKeyDown(KEY_LEFT_BRACKET)  || IsKeyDown(KEY_MINUS) || IsKeyDown(KEY_KP_SUBTRACT)) 
-		spawnRadius = (spawnRadius <= srMin) ? srMin : spawnRadius - 1;
-	if(IsKeyDown(KEY_RIGHT_BRACKET) || IsKeyDown(KEY_EQUAL) || IsKeyDown(KEY_KP_ADD))
-		spawnRadius = (spawnRadius >= srMax) ? srMax : spawnRadius + 1;
-
-	if(IsMouseButtonDown(0)) {
-		int cx = (int)mousePosition.x;
-		int cy = (int)mousePosition.y;
-		int r2 = spawnRadius * spawnRadius;
-
-		for(int x = cx - spawnRadius; x <= cx + spawnRadius; x++) {
-			for(int y = cy - spawnRadius; y <= cy + spawnRadius; y++) {
-			
-				if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT)
-					continue;
-				
-				int dx = x - cx;
-				int dy = y - cy;
-				
-				if(dx * dx + dy * dy <= r2 && particlesGrid[y * GRID_WIDTH + x] <= 0) {
-					particlesGrid[y * GRID_WIDTH + x] = currentParticleType;
-					velocityGrid [y * GRID_WIDTH + x] = 0;
-				}
-			}
-		}
-	}
-
-	if(IsKeyPressed(KEY_C)) clearParticleGrid();
 }
 
 void draw() {
