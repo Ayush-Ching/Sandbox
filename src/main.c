@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include <direct.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,16 +16,18 @@ void drawSpawnCircle();
 void sandFall();
 void takeScreenshots();
 
-const int  srMin               = 10 / GRID_SIZE;
-const int  srMax               = 250 / GRID_SIZE;
-int        spawnRadius         = 100 / GRID_SIZE;
-size_t     frameCount          = 0;
-unsigned   currentParticleType = 1;
-Vector2    mousePosition;
-unsigned   *particlesGrid;
-unsigned   *velocityGrid;
-Texture2D  particleTexture;
-Color      *pixels;
+int          spawnRadius          = 100 / GRID_SIZE;  // spawn radius
+const int    srMin                = 10 / GRID_SIZE;   // min spawn radius
+const int    srMax                = 250 / GRID_SIZE;  // max spawn radius
+size_t       frameCount           = 0;
+unsigned     currentParticleType  = 1;
+const float  gravity              = 0.1f;
+
+Vector2      mousePosition;
+unsigned     *particlesGrid;
+float        *velocityGrid;
+Texture2D    particleTexture;
+Color        *pixels;
 
 int main(void) {
 	printf("Working directory: %s\n", GetWorkingDirectory());
@@ -66,7 +69,7 @@ void initGame() {
 	frameCount = 0;
 
 	particlesGrid = calloc(GRID_WIDTH * GRID_HEIGHT, sizeof(unsigned));
-	velocityGrid  = calloc(GRID_WIDTH * GRID_HEIGHT, sizeof(unsigned));
+	velocityGrid  = calloc(GRID_WIDTH * GRID_HEIGHT, sizeof(float));
 
 	pixels = malloc(GRID_WIDTH * GRID_HEIGHT * sizeof(Color));
 
@@ -86,17 +89,16 @@ void updateParticles() {
 		for(int x = 0; x < GRID_WIDTH; x++) {
 			if(particlesGrid[GetGridIndex(x, y)] <= 0) continue;
 
+			velocityGrid[GetGridIndex(x, y)] += gravity;
 
-			velocityGrid[GetGridIndex(x, y)]++;
-
-			int repeat = (int)velocityGrid[GetGridIndex(x, y)];
+			int repeat = (int)ceil(velocityGrid[GetGridIndex(x, y)]);
 			while(repeat--) {
 				int p8 = GetNeighbourParticleType(x, y, 8, particlesGrid);
 				if(p8 <= 0) {
 					particlesGrid[GetGridIndex(x, y + 1)] = particlesGrid[GetGridIndex(x, y)];
 					velocityGrid[GetGridIndex(x, y + 1)] = velocityGrid[GetGridIndex(x, y)];
 					particlesGrid[GetGridIndex(x, y)] = 0;
-					velocityGrid[GetGridIndex(x, y)] = 0;
+					velocityGrid[GetGridIndex(x, y)] = 0.0f;
 					y = y + 1;
 					continue;
 				}
@@ -106,7 +108,7 @@ void updateParticles() {
 					particlesGrid[GetGridIndex(x - 1, y + 1)] = particlesGrid[GetGridIndex(x, y)];
 					velocityGrid[GetGridIndex(x - 1, y + 1)] = velocityGrid[GetGridIndex(x, y)];
 					particlesGrid[GetGridIndex(x, y)] = 0;
-					velocityGrid[GetGridIndex(x, y)] = 0;
+					velocityGrid[GetGridIndex(x, y)] = 0.0f;
 					x = x - 1;
 					y = y + 1;
 					continue;
@@ -118,13 +120,13 @@ void updateParticles() {
 					particlesGrid[GetGridIndex(x + 1, y + 1)] = particlesGrid[GetGridIndex(x, y)];
 					velocityGrid[GetGridIndex(x + 1, y + 1)] = velocityGrid[GetGridIndex(x, y)];
 					particlesGrid[GetGridIndex(x, y)] = 0;
-					velocityGrid[GetGridIndex(x, y)] = 0;
+					velocityGrid[GetGridIndex(x, y)] = 0.0f;
 					x = x + 1;
 					y = y + 1;
 					continue;
 				}
 
-				velocityGrid[GetGridIndex(x, y)] = 0;
+				velocityGrid[GetGridIndex(x, y)] = 0.0f;
 
 			}
 		}
@@ -155,8 +157,10 @@ void processInput() {
 				int dx = x - cx;
 				int dy = y - cy;
 				
-				if(dx * dx + dy * dy <= r2 && particlesGrid[y * GRID_WIDTH + x] <= 0)
+				if(dx * dx + dy * dy <= r2 && particlesGrid[y * GRID_WIDTH + x] <= 0) {
 					particlesGrid[y * GRID_WIDTH + x] = currentParticleType;
+					velocityGrid [y * GRID_WIDTH + x] = 0;
+				}
 			}
 		}
 	}
