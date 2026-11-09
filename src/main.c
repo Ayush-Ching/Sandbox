@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #include <direct.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +16,7 @@ void clearParticleGrid();
 void drawSpawnCircle();
 void sandFall();
 void takeScreenshots();
+Color GetRandomColorShift(Color color);
 
 int          spawnRadius          = 50 / GRID_SIZE;   // spawn radius
 const int    srMin                = 10 / GRID_SIZE;   // min spawn radius
@@ -24,12 +26,13 @@ unsigned     currentParticleType  = 1;
 const float  gravity              = 0.1f;
 const float  maxVelocity          = 3.0f;
 const int    gridLength           = GRID_WIDTH * GRID_HEIGHT;
+const int    colorVariance        = 10;
 
 Vector2      mousePosition;
 unsigned     *particlesGrid;
 float        *velocityGrid;
+Color        *pixelColors;
 Texture2D    particleTexture;
-Color        *pixels;
 
 int main(void) {
 	printf("Working directory: %s\n", GetWorkingDirectory());
@@ -39,6 +42,7 @@ int main(void) {
 	printf("mkdir result: %d\n", result);
 	printf("Frames directory exists: %d\n", DirectoryExists("frames"));
 
+	SetRandomSeed(time(NULL));
 
 	initGame();
 
@@ -53,7 +57,7 @@ int main(void) {
 	}
 
 	UnloadTexture(particleTexture);
-	free(pixels);
+	free(pixelColors);
 	free(particlesGrid);
 	free(velocityGrid);
 
@@ -72,9 +76,9 @@ void initGame() {
 
 	particlesGrid = calloc(gridLength, sizeof(unsigned));
 	velocityGrid  = calloc(gridLength, sizeof(float));
-	pixels        = malloc(gridLength * sizeof(Color));
+	pixelColors   = malloc(gridLength * sizeof(Color));
 
-	if(!particlesGrid || !velocityGrid || !pixels) {
+	if(!particlesGrid || !velocityGrid || !pixelColors) {
 		fprintf(stderr, "Failed to allocate memory for the grids\n");
 	}
 
@@ -114,6 +118,7 @@ void processInput() {
 				if(dx * dx + dy * dy <= r2) {
 					particlesGrid[y * GRID_WIDTH + x] = currentParticleType;
 					velocityGrid [y * GRID_WIDTH + x] = 0;
+					pixelColors  [y * GRID_WIDTH + x] = GetRandomColorShift(ParticleTypes[currentParticleType].color);
 				}
 			}
 		}
@@ -144,9 +149,11 @@ void updateParticles() {
 				int p8 = GetNeighbourParticleType(newX, newY, 8, particlesGrid);
 				if(p8 <= 0) {
 					particlesGrid[GetGridIndex(newX, newY + 1)] = particlesGrid[GetGridIndex(newX, newY)];
-					velocityGrid[GetGridIndex(newX, newY + 1)] = velocityGrid[GetGridIndex(newX, newY)];
-					particlesGrid[GetGridIndex(newX, newY)] = 0;
-					velocityGrid[GetGridIndex(newX, newY)] = 0.0f;
+					velocityGrid [GetGridIndex(newX, newY + 1)] = velocityGrid [GetGridIndex(newX, newY)];
+					pixelColors  [GetGridIndex(newX, newY + 1)] = pixelColors  [GetGridIndex(newX, newY)];
+					particlesGrid[GetGridIndex(newX, newY)]     = 0;
+					velocityGrid [GetGridIndex(newX, newY)]     = 0.0f;
+					pixelColors  [GetGridIndex(newX, newY)]     = transparent;
 					newY = newY + 1;
 					continue;
 				}
@@ -154,9 +161,11 @@ void updateParticles() {
 				int p7 = GetNeighbourParticleType(newX, newY, 7, particlesGrid);
 				if(p7 <= 0) {
 					particlesGrid[GetGridIndex(newX - 1, newY + 1)] = particlesGrid[GetGridIndex(newX, newY)];
-					velocityGrid[GetGridIndex(newX - 1, newY + 1)] = velocityGrid[GetGridIndex(newX, newY)];
-					particlesGrid[GetGridIndex(newX, newY)] = 0;
-					velocityGrid[GetGridIndex(newX, newY)] = 0.0f;
+					velocityGrid [GetGridIndex(newX - 1, newY + 1)] = velocityGrid [GetGridIndex(newX, newY)];
+					pixelColors  [GetGridIndex(newX - 1, newY + 1)] = pixelColors  [GetGridIndex(newX, newY)];
+					particlesGrid[GetGridIndex(newX, newY)]         = 0;
+					velocityGrid [GetGridIndex(newX, newY)]         = 0.0f;
+					pixelColors  [GetGridIndex(newX, newY)]         = transparent;
 					newX = newX - 1;
 					newY = newY + 1;
 					continue;
@@ -166,9 +175,11 @@ void updateParticles() {
 				int p6 = GetNeighbourParticleType(newX, newY, 6, particlesGrid);
 				if(p9 <= 0 && p6 <= 0) {
 					particlesGrid[GetGridIndex(newX + 1, newY + 1)] = particlesGrid[GetGridIndex(newX, newY)];
-					velocityGrid[GetGridIndex(newX + 1, newY + 1)] = velocityGrid[GetGridIndex(newX, newY)];
-					particlesGrid[GetGridIndex(newX, newY)] = 0;
-					velocityGrid[GetGridIndex(newX, newY)] = 0.0f;
+					velocityGrid [GetGridIndex(newX + 1, newY + 1)] = velocityGrid [GetGridIndex(newX, newY)];
+					pixelColors  [GetGridIndex(newX + 1, newY + 1)] = pixelColors  [GetGridIndex(newX, newY)];
+					particlesGrid[GetGridIndex(newX, newY)]         = 0;
+					velocityGrid [GetGridIndex(newX, newY)]         = 0.0f;
+					pixelColors  [GetGridIndex(newX, newY)]         = transparent;
 					newX = newX + 1;
 					newY = newY + 1;
 					continue;
@@ -182,11 +193,7 @@ void updateParticles() {
 }
 
 void draw() {
-	for(size_t i=0; i<gridLength; i++) {
-		pixels[i] = ParticleTypes[particlesGrid[i]].color;
-	}
-
-	UpdateTexture(particleTexture, pixels);
+	UpdateTexture(particleTexture, pixelColors);
 
 	BeginDrawing();
 
@@ -223,6 +230,7 @@ void clearParticleGrid() {
 	for(size_t i=0; i<GRID_WIDTH * GRID_HEIGHT; i++) {
 		particlesGrid[i] = 0;
 		velocityGrid[i]  = 0.0f;
+		pixelColors[i]   = transparent;
 	}
 }
 
@@ -233,6 +241,8 @@ void sandFall() {
 	if(timer > 3) {
 		timer = 0;
 		particlesGrid[GetGridIndex(GRID_WIDTH / 2, 0)] = 1;
+		velocityGrid [GetGridIndex(GRID_WIDTH / 2, 0)] = 0;
+		pixelColors  [GetGridIndex(GRID_WIDTH / 2, 0)] = GetRandomColorShift(ParticleTypes[1].color);
 	}
 }
 
@@ -242,4 +252,13 @@ void takeScreenshots() {
 	ImageCrop(&screenshot, crop);
 	ExportImage(screenshot, TextFormat("frames/frame_%04zu.png", frameCount));
 	UnloadImage(screenshot);
+}
+
+Color GetRandomColorShift(Color color) {
+	return (Color) {
+			color.r + GetRandomValue(-colorVariance, colorVariance),
+			color.g + GetRandomValue(-colorVariance, colorVariance),
+			color.b + GetRandomValue(-colorVariance, colorVariance),
+			color.a
+		};
 }
