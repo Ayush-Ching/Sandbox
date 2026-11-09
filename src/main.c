@@ -13,14 +13,16 @@ void draw();
 void clearParticleGrid();
 void drawSpawnCircle();
 void sandFall();
+void takeScreenshots();
 
 const int  srMin               = 10 / GRID_SIZE;
 const int  srMax               = 250 / GRID_SIZE;
 int        spawnRadius         = 100 / GRID_SIZE;
-int        frameCount          = 0;
+size_t     frameCount          = 0;
 unsigned   currentParticleType = 1;
 Vector2    mousePosition;
 unsigned   *particlesGrid;
+unsigned   *velocityGrid;
 Texture2D  particleTexture;
 Color      *pixels;
 
@@ -41,17 +43,14 @@ int main(void) {
 		sandFall();
 		draw();
 		
-		Image screenshot = LoadImageFromScreen();
-		Rectangle crop = {0, 225, 1600, 900};
-		ImageCrop(&screenshot, crop);
-		ExportImage(screenshot, TextFormat("frames/frame_%04d.png", frameCount));
-		UnloadImage(screenshot);
+		// takeScreenshots();
 		frameCount++;
 	}
 
 	UnloadTexture(particleTexture);
 	free(pixels);
 	free(particlesGrid);
+	free(velocityGrid);
 
 	CloseWindow();
 	
@@ -67,6 +66,7 @@ void initGame() {
 	frameCount = 0;
 
 	particlesGrid = calloc(GRID_WIDTH * GRID_HEIGHT, sizeof(unsigned));
+	velocityGrid  = calloc(GRID_WIDTH * GRID_HEIGHT, sizeof(unsigned));
 
 	pixels = malloc(GRID_WIDTH * GRID_HEIGHT * sizeof(Color));
 
@@ -77,7 +77,7 @@ void initGame() {
 	SetTextureFilter(particleTexture, TEXTURE_FILTER_POINT);
 }
 
-void updateParticles() {	
+void updateParticles() {
 	// 1 2 3
 	// 4 5 6
 	// 7 8 9
@@ -86,26 +86,46 @@ void updateParticles() {
 		for(int x = 0; x < GRID_WIDTH; x++) {
 			if(particlesGrid[GetGridIndex(x, y)] <= 0) continue;
 
-			int p8 = GetNeighbourParticleType(x, y, 8, particlesGrid);
-			if(p8 <= 0) {
-				particlesGrid[GetGridIndex(x, y + 1)] = particlesGrid[GetGridIndex(x, y)];
-				particlesGrid[GetGridIndex(x, y)] = 0;
-				continue;
-			}
 
-			int p7 = GetNeighbourParticleType(x, y, 7, particlesGrid);
-			if(p7 <= 0) {
-				particlesGrid[GetGridIndex(x - 1, y + 1)] = particlesGrid[GetGridIndex(x, y)];
-				particlesGrid[GetGridIndex(x, y)] = 0;
-				continue;
-			}
+			velocityGrid[GetGridIndex(x, y)]++;
 
-			int p9 = GetNeighbourParticleType(x, y, 9, particlesGrid);
-			int p6 = GetNeighbourParticleType(x, y, 6, particlesGrid);
-			if(p9 <= 0 && p6 <= 0) {
-				particlesGrid[GetGridIndex(x + 1, y + 1)] = particlesGrid[GetGridIndex(x, y)];
-				particlesGrid[GetGridIndex(x, y)] = 0;
-				continue;
+			int repeat = (int)velocityGrid[GetGridIndex(x, y)];
+			while(repeat--) {
+				int p8 = GetNeighbourParticleType(x, y, 8, particlesGrid);
+				if(p8 <= 0) {
+					particlesGrid[GetGridIndex(x, y + 1)] = particlesGrid[GetGridIndex(x, y)];
+					velocityGrid[GetGridIndex(x, y + 1)] = velocityGrid[GetGridIndex(x, y)];
+					particlesGrid[GetGridIndex(x, y)] = 0;
+					velocityGrid[GetGridIndex(x, y)] = 0;
+					y = y + 1;
+					continue;
+				}
+
+				int p7 = GetNeighbourParticleType(x, y, 7, particlesGrid);
+				if(p7 <= 0) {
+					particlesGrid[GetGridIndex(x - 1, y + 1)] = particlesGrid[GetGridIndex(x, y)];
+					velocityGrid[GetGridIndex(x - 1, y + 1)] = velocityGrid[GetGridIndex(x, y)];
+					particlesGrid[GetGridIndex(x, y)] = 0;
+					velocityGrid[GetGridIndex(x, y)] = 0;
+					x = x - 1;
+					y = y + 1;
+					continue;
+				}
+
+				int p9 = GetNeighbourParticleType(x, y, 9, particlesGrid);
+				int p6 = GetNeighbourParticleType(x, y, 6, particlesGrid);
+				if(p9 <= 0 && p6 <= 0) {
+					particlesGrid[GetGridIndex(x + 1, y + 1)] = particlesGrid[GetGridIndex(x, y)];
+					velocityGrid[GetGridIndex(x + 1, y + 1)] = velocityGrid[GetGridIndex(x, y)];
+					particlesGrid[GetGridIndex(x, y)] = 0;
+					velocityGrid[GetGridIndex(x, y)] = 0;
+					x = x + 1;
+					y = y + 1;
+					continue;
+				}
+
+				velocityGrid[GetGridIndex(x, y)] = 0;
+
 			}
 		}
 	}
@@ -196,4 +216,12 @@ void sandFall() {
 		timer = 0;
 		particlesGrid[GetGridIndex(GRID_WIDTH / 2, 0)] = 1;
 	}
+}
+
+void takeScreenshots() {
+	Image screenshot = LoadImageFromScreen();
+	Rectangle crop = {0, 225, 1600, 900};
+	ImageCrop(&screenshot, crop);
+	ExportImage(screenshot, TextFormat("frames/frame_%04zu.png", frameCount));
+	UnloadImage(screenshot);
 }
