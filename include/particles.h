@@ -1,15 +1,13 @@
 #ifndef PARTICLES_H
 #define PARTICLES_H
 
-#include "colors.h"
+#include <raylib.h>
 
 typedef struct Particle {
 	Color    color;
 } Particle;
 
-const Particle ParticleTypes[] = {
-	{ transparent },
-	{ sandColor }
-};
+void updateParticles(const float gravity, const float maxVelocity);
+void swapParticles(int i1, int i2);
 
 #endif
