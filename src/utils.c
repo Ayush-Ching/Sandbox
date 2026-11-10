@@ -57,10 +57,6 @@ unsigned GetNeighbourParticleType(int x, int y, int pos, unsigned* particlesGrid
 	}
 }
 
-unsigned GetNeighbourParticleTypeXY(int x, int y, int dx, int dy, unsigned* particlesGrid) {
-	return 0;
-}
-
 int GetGridIndex(int x, int y) {
 	return y * GRID_WIDTH + x;
 }

@@ -8,15 +8,16 @@
 #include "utils.h"
 #include "constants.h"
 
-void initGame();
-void updateParticles();
-void processInput();
-void draw();
-void clearParticleGrid();
-void drawSpawnCircle();
-void sandFall();
-void takeScreenshots();
-Color GetRandomColorShift(Color color);
+void  initGame();
+void  updateParticles();
+void  processInput();
+void  draw();
+void  clearParticleGrid();
+void  drawSpawnCircle();
+void  sandFall();
+void  takeScreenshots();
+Color getRandomColorShift(Color color);
+void  swapParticles(int i1, int i2);
 
 int          spawnRadius          = 50 / GRID_SIZE;   // spawn radius
 const int    srMin                = 10 / GRID_SIZE;   // min spawn radius
@@ -34,6 +35,7 @@ float        *velocityGrid;
 Color        *pixelColors;
 Texture2D    particleTexture;
 
+
 int main(void) {
 	printf("Working directory: %s\n", GetWorkingDirectory());
 
@@ -49,7 +51,7 @@ int main(void) {
 	while(!WindowShouldClose()) {
 		processInput();
 		updateParticles();
-		sandFall();
+		// sandFall();
 		draw();
 		
 		// takeScreenshots();
@@ -118,7 +120,7 @@ void processInput() {
 				if(dx * dx + dy * dy <= r2) {
 					particlesGrid[y * GRID_WIDTH + x] = currentParticleType;
 					velocityGrid [y * GRID_WIDTH + x] = 0;
-					pixelColors  [y * GRID_WIDTH + x] = GetRandomColorShift(ParticleTypes[currentParticleType].color);
+					pixelColors  [y * GRID_WIDTH + x] = getRandomColorShift(ParticleTypes[currentParticleType].color);
 				}
 			}
 		}
@@ -148,24 +150,14 @@ void updateParticles() {
 			while(repeat--) {
 				int p8 = GetNeighbourParticleType(newX, newY, 8, particlesGrid);
 				if(p8 <= 0) {
-					particlesGrid[GetGridIndex(newX, newY + 1)] = particlesGrid[GetGridIndex(newX, newY)];
-					velocityGrid [GetGridIndex(newX, newY + 1)] = velocityGrid [GetGridIndex(newX, newY)];
-					pixelColors  [GetGridIndex(newX, newY + 1)] = pixelColors  [GetGridIndex(newX, newY)];
-					particlesGrid[GetGridIndex(newX, newY)]     = 0;
-					velocityGrid [GetGridIndex(newX, newY)]     = 0.0f;
-					pixelColors  [GetGridIndex(newX, newY)]     = transparent;
+					swapParticles(GetGridIndex(newX, newY + 1), GetGridIndex(newX, newY));
 					newY = newY + 1;
 					continue;
 				}
 
 				int p7 = GetNeighbourParticleType(newX, newY, 7, particlesGrid);
 				if(p7 <= 0) {
-					particlesGrid[GetGridIndex(newX - 1, newY + 1)] = particlesGrid[GetGridIndex(newX, newY)];
-					velocityGrid [GetGridIndex(newX - 1, newY + 1)] = velocityGrid [GetGridIndex(newX, newY)];
-					pixelColors  [GetGridIndex(newX - 1, newY + 1)] = pixelColors  [GetGridIndex(newX, newY)];
-					particlesGrid[GetGridIndex(newX, newY)]         = 0;
-					velocityGrid [GetGridIndex(newX, newY)]         = 0.0f;
-					pixelColors  [GetGridIndex(newX, newY)]         = transparent;
+					swapParticles(GetGridIndex(newX - 1, newY + 1), GetGridIndex(newX, newY));
 					newX = newX - 1;
 					newY = newY + 1;
 					continue;
@@ -174,12 +166,7 @@ void updateParticles() {
 				int p9 = GetNeighbourParticleType(newX, newY, 9, particlesGrid);
 				int p6 = GetNeighbourParticleType(newX, newY, 6, particlesGrid);
 				if(p9 <= 0 && p6 <= 0) {
-					particlesGrid[GetGridIndex(newX + 1, newY + 1)] = particlesGrid[GetGridIndex(newX, newY)];
-					velocityGrid [GetGridIndex(newX + 1, newY + 1)] = velocityGrid [GetGridIndex(newX, newY)];
-					pixelColors  [GetGridIndex(newX + 1, newY + 1)] = pixelColors  [GetGridIndex(newX, newY)];
-					particlesGrid[GetGridIndex(newX, newY)]         = 0;
-					velocityGrid [GetGridIndex(newX, newY)]         = 0.0f;
-					pixelColors  [GetGridIndex(newX, newY)]         = transparent;
+					swapParticles(GetGridIndex(newX + 1, newY + 1), GetGridIndex(newX, newY));
 					newX = newX + 1;
 					newY = newY + 1;
 					continue;
@@ -214,8 +201,7 @@ void drawSpawnCircle() {
 	for(int x = cx - spawnRadius; x <= cx + spawnRadius; x++) {
 		for(int y = cy - spawnRadius; y <= cy + spawnRadius; y++) {
 		
-			if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT)
-				continue;
+			if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) continue;
 			
 			int dx = x - cx > 0 ? x - cx : cx - x;
 			int dy = y - cy > 0 ? y - cy : cy - y;
@@ -242,7 +228,7 @@ void sandFall() {
 		timer = 0;
 		particlesGrid[GetGridIndex(GRID_WIDTH / 2, 0)] = 1;
 		velocityGrid [GetGridIndex(GRID_WIDTH / 2, 0)] = 0;
-		pixelColors  [GetGridIndex(GRID_WIDTH / 2, 0)] = GetRandomColorShift(ParticleTypes[1].color);
+		pixelColors  [GetGridIndex(GRID_WIDTH / 2, 0)] = getRandomColorShift(ParticleTypes[1].color);
 	}
 }
 
@@ -254,11 +240,25 @@ void takeScreenshots() {
 	UnloadImage(screenshot);
 }
 
-Color GetRandomColorShift(Color color) {
+Color getRandomColorShift(Color color) {
 	return (Color) {
 			color.r + GetRandomValue(-colorVariance, colorVariance),
 			color.g + GetRandomValue(-colorVariance, colorVariance),
 			color.b + GetRandomValue(-colorVariance, colorVariance),
 			color.a
 		};
+}
+
+void swapParticles(int i1, int i2) {
+	unsigned tempP = particlesGrid[i1];
+	float    tempV = velocityGrid [i1];
+	Color    tempC = pixelColors  [i1];
+
+	particlesGrid[i1] = particlesGrid[i2];
+	velocityGrid [i1] = velocityGrid [i2];
+	pixelColors  [i1] = pixelColors  [i2];
+
+	particlesGrid[i2] = tempP;
+	velocityGrid [i2] = tempV;
+	pixelColors  [i2] = tempC;
 }
