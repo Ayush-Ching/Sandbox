@@ -150,6 +150,9 @@ void processInput() {
 	}
 
 	if(IsKeyPressed(KEY_C)) clearParticleGrid();
+
+	if     (IsKeyPressed(KEY_ONE)  || IsKeyPressed(KEY_KP_1)) currentParticleType = 1;
+	else if(IsKeyPressed(KEY_TWO)  || IsKeyPressed(KEY_KP_2)) currentParticleType = 2;
 }
 
 void draw() {
@@ -160,6 +163,10 @@ void draw() {
 	ClearBackground(bg);
 
 	DrawTextureEx(particleTexture, (Vector2){0, 0}, 0, GRID_SIZE, WHITE);
+
+	char currentParticleText[32];
+	sprintf(currentParticleText, "%s", ParticlesList[currentParticleType].name);
+	DrawText(currentParticleText, 10, 10, 40, WHITE);
 
 	drawSpawnCircle();
 

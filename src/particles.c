@@ -5,9 +5,9 @@
 #include "colors.h"
 
 Particle ParticlesList[] = {
-	{ transparent },
-	{ sandColor },
-	{ stoneColor }
+	{ "Nothing", transparent },
+	{ "Sand"   , sandColor },
+	{ "Stone"  , stoneColor }
 };
 
 extern unsigned *particlesGrid;
@@ -37,6 +37,9 @@ void updateParticles(const float gravity, const float maxVelocity) {
 					break;
 				case 1:
 					updateSand(x, y, repeat);
+					break;
+				case 2:
+					updateStone(x, y, repeat);
 					break;
 				default:
 					break;
@@ -73,6 +76,14 @@ void updateSand(int x, int y, int repeat) {
 
 		velocityGrid[GetGridIndex(x, y)] = 0.0f;
 
+	}
+}
+
+void updateStone(int x, int y, int repeat) {
+	// baiscally do nothing for now
+	while(repeat--) {
+		x = y;
+		y = x;
 	}
 }
 
