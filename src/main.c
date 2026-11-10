@@ -23,10 +23,10 @@ const int    srMin                = 10 / GRID_SIZE;   // min spawn radius
 const int    srMax                = 250 / GRID_SIZE;  // max spawn radius
 size_t       frameCount           = 0;
 unsigned     currentParticleType  = 1;
-const float  gravity              = 0.1f;
-const float  maxVelocity          = 3.0f;
+const float  gravity              = 0.1f * (5.0f / GRID_SIZE);
+const float  maxVelocity          = 3.0f * (5.0f / GRID_SIZE);
 const int    gridLength           = GRID_WIDTH * GRID_HEIGHT;
-const int    colorVariance        = 10;
+const int    colorVariance        = 7;
 
 Vector2      mousePosition;
 unsigned     *particlesGrid;
