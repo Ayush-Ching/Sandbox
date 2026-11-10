@@ -111,8 +111,9 @@ void processInput() {
 			for(int y = cy - spawnRadius; y <= cy + spawnRadius; y++) {
 			
 				if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) continue;
-				if((x + y) % 2 != cm) continue;
 				if(particlesGrid[y * GRID_WIDTH + x] > 0) continue;
+
+				if(currentParticleType != 2 && (x + y) % 2 != cm) continue;
 				
 				int dx = x - cx;
 				int dy = y - cy;
@@ -121,6 +122,28 @@ void processInput() {
 					particlesGrid[y * GRID_WIDTH + x] = currentParticleType;
 					velocityGrid [y * GRID_WIDTH + x] = 0;
 					pixelColors  [y * GRID_WIDTH + x] = getRandomColorShift(ParticlesList[currentParticleType].color);
+				}
+			}
+		}
+	}
+
+	if(IsMouseButtonDown(1)) {
+		int cx = (int)mousePosition.x;
+		int cy = (int)mousePosition.y;
+		int r2 = spawnRadius * spawnRadius;
+
+		for(int x = cx - spawnRadius; x <= cx + spawnRadius; x++) {
+			for(int y = cy - spawnRadius; y <= cy + spawnRadius; y++) {
+			
+				if(x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) continue;
+
+				int dx = x - cx;
+				int dy = y - cy;
+				
+				if(dx * dx + dy * dy <= r2) {
+					particlesGrid[y * GRID_WIDTH + x] = 0;
+					velocityGrid [y * GRID_WIDTH + x] = 0;
+					pixelColors  [y * GRID_WIDTH + x] = getRandomColorShift(ParticlesList[0].color);
 				}
 			}
 		}

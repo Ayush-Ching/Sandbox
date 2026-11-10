@@ -6,7 +6,8 @@
 
 Particle ParticlesList[] = {
 	{ transparent },
-	{ sandColor }
+	{ sandColor },
+	{ stoneColor }
 };
 
 extern unsigned *particlesGrid;
@@ -22,47 +23,58 @@ void updateParticles(const float gravity, const float maxVelocity) {
 		for(int x = 0; x < GRID_WIDTH; x++) {
 			if(particlesGrid[GetGridIndex(x, y)] <= 0) continue;
 			
-			int newX = x;
-			int newY = y;
-
-			velocityGrid[GetGridIndex(newX, newY)] += gravity;
-			if (velocityGrid[GetGridIndex(newX, newY)] > maxVelocity) {
-				velocityGrid[GetGridIndex(newX, newY)] = maxVelocity;
+			velocityGrid[GetGridIndex(x, y)] += gravity;
+			if (velocityGrid[GetGridIndex(x, y)] > maxVelocity) {
+				velocityGrid[GetGridIndex(x, y)] = maxVelocity;
 			}
 
-			int repeat = (int)ceil(velocityGrid[GetGridIndex(newX, newY)]);
-			while(repeat--) {
-				int p8 = GetNeighbourParticleType(newX, newY, 8, particlesGrid);
-				if(p8 <= 0) {
-					swapParticles(GetGridIndex(newX, newY + 1), GetGridIndex(newX, newY));
-					newY = newY + 1;
-					continue;
-				}
+			int repeat = (int)ceil(velocityGrid[GetGridIndex(x, y)]);
 
-				int p7 = GetNeighbourParticleType(newX, newY, 7, particlesGrid);
-				if(p7 <= 0) {
-					swapParticles(GetGridIndex(newX - 1, newY + 1), GetGridIndex(newX, newY));
-					newX = newX - 1;
-					newY = newY + 1;
-					continue;
-				}
-
-				int p9 = GetNeighbourParticleType(newX, newY, 9, particlesGrid);
-				int p6 = GetNeighbourParticleType(newX, newY, 6, particlesGrid);
-				if(p9 <= 0 && p6 <= 0) {
-					swapParticles(GetGridIndex(newX + 1, newY + 1), GetGridIndex(newX, newY));
-					newX = newX + 1;
-					newY = newY + 1;
-					continue;
-				}
-
-				velocityGrid[GetGridIndex(newX, newY)] = 0.0f;
-
+			switch(particlesGrid[GetGridIndex(x, y)]) {
+				case 0:
+					// Guess what happens when you update nothing...
+					// Nothing happens!!
+					break;
+				case 1:
+					updateSand(x, y, repeat);
+					break;
+				default:
+					break;
 			}
 		}
 	}
 }
 
+void updateSand(int x, int y, int repeat) {
+	while(repeat--) {
+		int p8 = GetNeighbourParticleType(x, y, 8, particlesGrid);
+		if(p8 <= 0) {
+			swapParticles(GetGridIndex(x, y + 1), GetGridIndex(x, y));
+			y = y + 1;
+			continue;
+		}
+
+		int p7 = GetNeighbourParticleType(x, y, 7, particlesGrid);
+		if(p7 <= 0) {
+			swapParticles(GetGridIndex(x - 1, y + 1), GetGridIndex(x, y));
+			x = x - 1;
+			y = y + 1;
+			continue;
+		}
+
+		int p9 = GetNeighbourParticleType(x, y, 9, particlesGrid);
+		int p6 = GetNeighbourParticleType(x, y, 6, particlesGrid);
+		if(p9 <= 0 && p6 <= 0) {
+			swapParticles(GetGridIndex(x + 1, y + 1), GetGridIndex(x, y));
+			x = x + 1;
+			y = y + 1;
+			continue;
+		}
+
+		velocityGrid[GetGridIndex(x, y)] = 0.0f;
+
+	}
+}
 
 void swapParticles(int i1, int i2) {
 	unsigned tempP = particlesGrid[i1];
