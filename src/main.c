@@ -44,13 +44,13 @@ Texture2D    particleTexture;
 extern Particle ParticlesList[];
 
 int main(void) {
-	printf("Working directory: %s\n", GetWorkingDirectory());
-
-	int result = MKDIR("frames");
-
-	printf("mkdir result: %d\n", result);
-
-	printf("Frames directory exists: %d\n", DirectoryExists("frames"));
+	// printf("Working directory: %s\n", GetWorkingDirectory());
+	//
+	// int result = MKDIR("frames");
+	//
+	// printf("mkdir result: %d\n", result);
+	//
+	// printf("Frames directory exists: %d\n", DirectoryExists("frames"));
 
 	SetRandomSeed(time(NULL));
 
