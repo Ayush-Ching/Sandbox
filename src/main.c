@@ -7,6 +7,15 @@
 #include "constants.h"
 #include "colors.h"
 
+#ifdef _WIN32
+    #include <direct.h>
+    #define MKDIR(path) _mkdir(path)
+#else
+    #include <sys/stat.h>
+    #include <sys/types.h>
+    #define MKDIR(path) mkdir(path, 0755)
+#endif
+
 void  initGame();
 void  processInput();
 void  draw();
@@ -36,6 +45,10 @@ extern Particle ParticlesList[];
 
 int main(void) {
 	printf("Working directory: %s\n", GetWorkingDirectory());
+
+	int result = MKDIR("frames");
+
+	printf("mkdir result: %d\n", result);
 
 	printf("Frames directory exists: %d\n", DirectoryExists("frames"));
 
