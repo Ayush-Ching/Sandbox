@@ -20,7 +20,11 @@ pacman -S mingw-w64-ucrt-x86_64-gcc \
           mingw-w64-ucrt-x86_64-raylib
 ```
 
-For Linux machines, install `raylib` from your package manager if it is provided or build it from source.
+For Linux machines, install `raylib` from your package manager if it is provided or build it from source.<br>
+Fellow Fedora users can just use the following commands to install all required dependencies:
+```
+sudo dnf install gcc make raylib raylib-devel
+```
 
 ## Compiling
 
