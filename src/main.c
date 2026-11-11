@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <time.h>
-#include <direct.h>
 #include <stdlib.h>
 #include <string.h>
 #include "particles.h"
@@ -38,9 +37,6 @@ extern Particle ParticlesList[];
 int main(void) {
 	printf("Working directory: %s\n", GetWorkingDirectory());
 
-	int result = _mkdir("frames");
-
-	printf("mkdir result: %d\n", result);
 	printf("Frames directory exists: %d\n", DirectoryExists("frames"));
 
 	SetRandomSeed(time(NULL));
