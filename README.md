@@ -24,4 +24,4 @@ For Linux machines, install `raylib` from your package manager if it is provided
 
 ## Compiling
 
-Just run `make` from the project root if you have `make` installed or else use any other way to compile and link the files yourself.
+Just run `make` from the project root if you have `make` installed. The executable will be in the build directory.
